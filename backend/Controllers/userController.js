@@ -1,28 +1,28 @@
-const User = require("../models/userModel");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-require("dotenv").config();
+import User from "../models/userModel.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import "dotenv/config";
 
-// register
-exports.register = async (req, res) => {
+export const register = async (req, res) => {
+
   try {
     const { name, email, password, role, address } = req.body;
 
-    //  validation
+
     if (!name || !email || !password || !address) {
       return res.status(400).json({ message: "All fields required" });
     }
 
-    
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+
     const newUser = await User.create({
       name,
       email,
@@ -31,7 +31,7 @@ exports.register = async (req, res) => {
       address,
     });
 
-    // JWT payload
+
     const payload = {
       id: newUser._id,
       name: newUser.name,
@@ -40,7 +40,7 @@ exports.register = async (req, res) => {
       address: newUser.address,
     };
 
-    // Sign token
+
     const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
       expiresIn: "1d",
     });
@@ -56,8 +56,8 @@ exports.register = async (req, res) => {
 };
 
 
-// LOGIN
-exports.login = async (req, res) => {
+
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -91,12 +91,10 @@ exports.login = async (req, res) => {
 
 
 
-// ADMIN 
-exports.adminDashboard = async (req, res) => {
+
+export const adminDashboard = async (req, res) => {
   res.json({
     message: "Welcome Admin, this is your dashboard!",
   });
 };
-
-
 

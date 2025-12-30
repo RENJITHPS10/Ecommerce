@@ -1,10 +1,8 @@
 import Cart from "../models/cartModel.js";
 
-//  add to cart 
-
 export const addToCart = async (req, res) => {
   try {
-    const { productId, name, price, image, size, quantity } = req.body; 
+    const { productId, name, price, image, size, quantity } = req.body;
 
     if (!productId || !name || !price || !size) {
       return res.status(400).json({ message: "Missing fields" });
@@ -13,8 +11,7 @@ export const addToCart = async (req, res) => {
     const existing = await Cart.findOne({ productId, size });
 
     if (existing) {
-      
-      existing.quantity += quantity || 1;  
+      existing.quantity += quantity || 1;
       await existing.save();
       return res.json({ message: "Quantity updated", cart: existing });
     }
@@ -25,7 +22,7 @@ export const addToCart = async (req, res) => {
       price,
       image,
       size,
-      quantity: quantity || 1,  
+      quantity: quantity || 1,
     });
 
     res.json({ message: "Added to cart", cart: newItem });
@@ -33,8 +30,6 @@ export const addToCart = async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-
-// get cart 
 
 export const getCart = async (req, res) => {
   try {
@@ -45,8 +40,6 @@ export const getCart = async (req, res) => {
   }
 };
 
-// Clr or delete
-
 export const clearCart = async (req, res) => {
   try {
     await Cart.deleteMany();
@@ -56,12 +49,10 @@ export const clearCart = async (req, res) => {
   }
 };
 
-// update
-
 export const updateQuantity = async (req, res) => {
   try {
     const { id } = req.params;
-    const { action } = req.body; 
+    const { action } = req.body;
     const item = await Cart.findById(id);
     if (!item) return res.status(404).json({ message: "Item not found" });
 

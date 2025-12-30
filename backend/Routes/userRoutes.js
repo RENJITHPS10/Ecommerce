@@ -1,16 +1,12 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
 
-
-const userController = require("../Controllers/userController");
-const { protect, authorize } = require("../Middleware/isAuth");
+import * as userController from "../Controllers/userController.js";
+import { protect, authorize } from "../Middleware/isAuth.js";
 
 router.post("/register", userController.register);
-
-
 router.post("/login", userController.login);
 
-// Admin only 
 router.get("/admin", protect, authorize("admin"), userController.adminDashboard);
 
-module.exports = router;
+export default router;

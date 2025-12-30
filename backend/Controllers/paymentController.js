@@ -3,22 +3,16 @@ import crypto from "crypto";
 import Payment from "../models/paymentModel.js";
 import Order from "../models/orderModel.js";
 import Product from "../models/productModel.js";
-import dotenv from "dotenv";
-import { log } from "console";
-
-dotenv.config();
-
+import "dotenv/config";
 
 const razorpay = new Razorpay({
   key_id: process.env.KEY_ID,
   key_secret: process.env.KEY_SECRET,
 });
 
-
 export const createOrder = async (req, res) => {
   try {
     const { cartItems, userId } = req.body;
-console.log(cartItems);
 
     if (!cartItems || cartItems.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });
@@ -28,7 +22,6 @@ console.log(cartItems);
       cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0) *
       100;
 
-    
     const options = {
       amount,
       currency: "INR",
@@ -37,7 +30,6 @@ console.log(cartItems);
 
     const razorpayOrder = await razorpay.orders.create(options);
 
-    // Saved
     await Payment.create({
       userId,
       products: cartItems,
@@ -49,11 +41,10 @@ console.log(cartItems);
 
     res.json({ order: razorpayOrder });
   } catch (err) {
-    console.log(err);
+    console.error(err);
     res.status(500).json({ message: "Create order failed" });
   }
 };
-
 
 export const verifyPayment = async (req, res) => {
   try {
@@ -81,7 +72,6 @@ export const verifyPayment = async (req, res) => {
     payment.status = "paid";
     await payment.save();
 
-    
     const totalAmount = payment.amount / 100;
 
     const newOrder = await Order.create({
@@ -93,7 +83,6 @@ export const verifyPayment = async (req, res) => {
       status: "Paid",
     });
 
-    // Update soldCount
     for (const item of payment.products) {
       await Product.findByIdAndUpdate(item.productId, {
         $inc: { soldCount: item.quantity },

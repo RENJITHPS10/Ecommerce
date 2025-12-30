@@ -1,14 +1,10 @@
 
-// !kjhgv
-const Review = require("../models/reviewModel");
+import Review from "../models/reviewModel.js";
 
-// -------------------- Add Review --------------------
-// This handles adding a review per order item
-exports.addReview = async (req, res) => {
+export const addReview = async (req, res) => {
   try {
     const { productId, rating, comment, orderItemId } = req.body;
 
-    // Validation
     if (!productId || !rating || !orderItemId) {
       return res.status(400).json({
         success: false,
@@ -16,7 +12,6 @@ exports.addReview = async (req, res) => {
       });
     }
 
-    // Check if this order item is already reviewed by this user
     const existingReview = await Review.findOne({
       orderItemId,
       userId: req.user.id,
@@ -29,7 +24,6 @@ exports.addReview = async (req, res) => {
       });
     }
 
-    // Create review
     const review = await Review.create({
       productId,
       userId: req.user.id,
@@ -52,9 +46,7 @@ exports.addReview = async (req, res) => {
   }
 };
 
-// -------------------- Get Reviews for a Product --------------------
-// This returns all reviews for a single product
-exports.getProductReviews = async (req, res) => {
+export const getProductReviews = async (req, res) => {
   try {
     const productId = req.params.productId;
 
@@ -83,8 +75,7 @@ exports.getProductReviews = async (req, res) => {
   }
 };
 
-// -------------------- Get Reviews by Logged-in User --------------------
-exports.getUserReviews = async (req, res) => {
+export const getUserReviews = async (req, res) => {
   try {
     const userId = req.user.id;
 

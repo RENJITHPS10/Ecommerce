@@ -1,11 +1,9 @@
-const express = require("express");
-const { createMessage, getAllContacts } = require("../Controllers/contactController");
+
+import express from "express";
+import { createMessage, getAllContacts } from "../Controllers/contactController.js";
 const contactRouter = express.Router();
 
+contactRouter.post("/create", createMessage);
+contactRouter.get("/allcontact", getAllContacts);
 
-contactRouter.post("/create",createMessage);
-
-contactRouter.get("/allcontact",getAllContacts)
-
-
-module.exports= contactRouter;
+export default contactRouter;

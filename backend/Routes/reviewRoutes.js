@@ -1,13 +1,11 @@
-const express = require("express");
-const { addReview, getProductReviews, getUserReviews } = require("../Controllers/reviewController");
-const { protect } = require("../Middleware/isAuth");
-
+import express from "express";
+import { addReview, getProductReviews, getUserReviews } from "../Controllers/reviewController.js";
+import { protect } from "../Middleware/isAuth.js";
 
 const reviewRouter = express.Router();
 
 reviewRouter.post("/add", protect, addReview);
 reviewRouter.get("/productreview/:productId", getProductReviews);
-reviewRouter.get("/myreviews",protect,getUserReviews)
+reviewRouter.get("/myreviews", protect, getUserReviews);
 
-module.exports = reviewRouter;
-
+export default reviewRouter;

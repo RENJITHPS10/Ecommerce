@@ -1,6 +1,5 @@
 import Order from "../models/orderModel.js";
 
-
 export const createOrder = async (req, res) => {
   try {
     const { items, totalAmount, paymentId, orderId } = req.body;
@@ -57,8 +56,6 @@ export const getMyOrders = async (req, res) => {
 };
 
 export const rateProduct = async (req, res) => {
-
-   
   try {
     const { productId } = req.body;
     const userId = req.user.id;

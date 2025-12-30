@@ -1,8 +1,6 @@
 import asynchandler from "express-async-handler";
 import Product from "../models/productModel.js";
-import uploadFromBuffer from "../utils/cloudinaryUpload.js";
-
-
+import uploadFromBuffer, { uploadMultipleFromBuffer, deleteFromCloudinary } from "../utils/cloudinaryUpload.js";
 
 export const createProduct = asynchandler(async (req, res) => {
   const { pname, price, category, soldcount } = req.body;
@@ -11,22 +9,33 @@ export const createProduct = asynchandler(async (req, res) => {
     return res.status(400).json({ message: "These are required fields" });
   }
 
-  let imageUrl = null;
-  let cloudinaryId = null;
+  let imageUrls = [];
+  let cloudinaryIds = [];
 
-  if (req.file) {
-    const result = await uploadFromBuffer(req.file.buffer, "product_uploads");
-    imageUrl = result.secure_url;
-    cloudinaryId = result.public_id;
+  // Handle multiple files upload
+  if (req.files && req.files.length > 0) {
+    try {
+      const uploadResults = await uploadMultipleFromBuffer(req.files, "product_uploads");
+      imageUrls = uploadResults.map(result => result.secure_url);
+      cloudinaryIds = uploadResults.map(result => result.public_id);
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to upload images", error: error.message });
+    }
   }
+
+  // Set primary image as first image
+  const primaryImage = imageUrls[0] || null;
+  const primaryCloudinaryId = cloudinaryIds[0] || null;
 
   const newProduct = await Product.create({
     pname,
     price,
-    image: imageUrl,
+    image: primaryImage,
+    images: imageUrls,
     category,
-    cloudinary_id: cloudinaryId,
-    soldcount,
+    cloudinary_id: primaryCloudinaryId,
+    cloudinary_ids: cloudinaryIds,
+    soldcount: soldcount || 0,
   });
 
   res.status(201).json({
@@ -34,7 +43,6 @@ export const createProduct = asynchandler(async (req, res) => {
     newProduct,
   });
 });
-
 
 export const readproduct = asynchandler(async (req, res) => {
   const { category } = req.query;
@@ -55,35 +63,85 @@ export const readproduct = asynchandler(async (req, res) => {
 
 
 export const updateProduct = asynchandler(async (req, res) => {
-  const { pname, price, image, category } = req.body;
+  const { pname, price, category, removeImageIds } = req.body;
 
-  const updatedValue = { pname, price, image, category };
+  const product = await Product.findById(req.params.id);
 
-  const updatedProduct = await Product.findByIdAndUpdate(
-    req.params.id,
-    updatedValue,
-    { new: true }
-  );
-
-  if (!updatedProduct) {
+  if (!product) {
     return res.status(404).json({ message: "Product not found" });
   }
+
+  // Handle image removal
+  if (removeImageIds && removeImageIds.length > 0) {
+    try {
+      // Delete from Cloudinary
+      const deletePromises = removeImageIds.map(id => deleteFromCloudinary(id));
+      await Promise.all(deletePromises);
+
+      // Remove from product arrays
+      product.cloudinary_ids = product.cloudinary_ids.filter(id => !removeImageIds.includes(id));
+      product.images = product.images.filter((_, index) =>
+        !removeImageIds.includes(product.cloudinary_ids[index])
+      );
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to delete images", error: error.message });
+    }
+  }
+
+  // Handle new image uploads
+  if (req.files && req.files.length > 0) {
+    try {
+      const uploadResults = await uploadMultipleFromBuffer(req.files, "product_uploads");
+      const newImageUrls = uploadResults.map(result => result.secure_url);
+      const newCloudinaryIds = uploadResults.map(result => result.public_id);
+
+      // Append new images to existing arrays
+      product.images = [...product.images, ...newImageUrls];
+      product.cloudinary_ids = [...product.cloudinary_ids, ...newCloudinaryIds];
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to upload new images", error: error.message });
+    }
+  }
+
+  // Update primary image (first in array)
+  if (product.images.length > 0) {
+    product.image = product.images[0];
+    product.cloudinary_id = product.cloudinary_ids[0];
+  }
+
+  // Update other fields
+  if (pname) product.pname = pname;
+  if (price) product.price = price;
+  if (category) product.category = category;
+
+  const updatedProduct = await product.save();
 
   res.status(200).json({ message: "Product updated", updatedProduct });
 });
 
 
 export const deleteproduct = asynchandler(async (req, res) => {
-  const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+  const product = await Product.findById(req.params.id);
 
-  if (!deletedProduct) {
+  if (!product) {
     return res.status(404).json({ message: "Product not found" });
   }
 
-  res.status(200).json({ message: "Product deleted", deletedProduct });
+  // Delete all images from Cloudinary
+  if (product.cloudinary_ids && product.cloudinary_ids.length > 0) {
+    try {
+      const deletePromises = product.cloudinary_ids.map(id => deleteFromCloudinary(id));
+      await Promise.all(deletePromises);
+    } catch (error) {
+      console.error("Error deleting images from Cloudinary:", error);
+      // Continue with product deletion even if Cloudinary deletion fails
+    }
+  }
+
+  await Product.findByIdAndDelete(req.params.id);
+
+  res.status(200).json({ message: "Product deleted successfully" });
 });
-
-
 
 export const uploadFile = asynchandler(async (req, res) => {
   if (!req.file) {
@@ -104,8 +162,6 @@ export const uploadFile = asynchandler(async (req, res) => {
   });
 });
 
-
-
 export const getProductById = asynchandler(async (req, res) => {
   const { id } = req.params;
 
@@ -117,8 +173,6 @@ export const getProductById = asynchandler(async (req, res) => {
 
   res.status(200).json({ success: true, product });
 });
-
-
 
 export const getAllFiles = asynchandler(async (req, res) => {
   const files = await Product.find();

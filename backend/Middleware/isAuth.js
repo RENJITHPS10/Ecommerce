@@ -1,7 +1,6 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
-
-const protect = (req, res, next) => {
+export const protect = (req, res, next) => {
   const token = req.header("Authorization")?.split(" ")[1];
 
   if (!token) {
@@ -9,17 +8,15 @@ const protect = (req, res, next) => {
   }
 
   try {
-    
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    req.user = decoded; 
+    req.user = decoded;
     next();
   } catch (error) {
     return res.status(401).json({ message: "Invalid token" });
   }
 };
 
-
-const authorize = (...roles) => {
+export const authorize = (...roles) => {
   return (req, res, next) => {
     if (!req.user || !roles.includes(req.user.role)) {
       return res
@@ -29,6 +26,4 @@ const authorize = (...roles) => {
     next();
   };
 };
-
-module.exports = { protect, authorize };
 

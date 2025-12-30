@@ -2,7 +2,7 @@ import Contact from "../models/contactModel.js";
 
 export const getAllContacts = async (req, res) => {
   try {
-    const contacts = await Contact.find().sort({ createdAt: -1 }); // latest first
+    const contacts = await Contact.find().sort({ createdAt: -1 });
     return res.status(200).json({
       success: true,
       contacts,
@@ -17,7 +17,7 @@ export const getAllContacts = async (req, res) => {
 
 export const createMessage = async (req, res) => {
   try {
-    const { name,phone, email, message } = req.body;
+    const { name, phone, email, message } = req.body;
 
     if (!name || !phone || !email || !message) {
       return res.status(400).json({ error: "All fields are required" });

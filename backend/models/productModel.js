@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema({
   pname: {
@@ -12,6 +12,10 @@ const productSchema = new mongoose.Schema({
   image: {
     type: String,
     required: true,
+  },
+  images: {
+    type: [String],
+    default: [],
   },
   category: {
     type: String,
@@ -27,18 +31,19 @@ const productSchema = new mongoose.Schema({
   cloudinary_id: {
     type: String,
   },
+  cloudinary_ids: {
+    type: [String],
+    default: [],
+  },
   uploadedAt: { type: Date, default: Date.now },
 
 
-  soldcount:{
-    type:Number,
-    default:0,
+  soldcount: {
+    type: Number,
+    default: 0,
   }
 });
 
 
 
-const Product = mongoose.model("product", productSchema);
-
-module.exports = Product;
-
+export default mongoose.model("product", productSchema);

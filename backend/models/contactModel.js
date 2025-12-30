@@ -1,4 +1,4 @@
-const mongoose=require("mongoose")
+import mongoose from "mongoose";
 
 const contactSchema = new mongoose.Schema(
   {
@@ -7,13 +7,11 @@ const contactSchema = new mongoose.Schema(
       required: [true, "Name is required"],
       trim: true,
     },
-    
     phone: {
       type: String,
       required: [true, "Phone number is required"],
       trim: true,
     },
-    
     email: {
       type: String,
       required: [true, "Email is required"],
@@ -27,6 +25,4 @@ const contactSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Contact = mongoose.model("contact",contactSchema)
-
-module.exports=Contact
+export default mongoose.model("contact", contactSchema);
