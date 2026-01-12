@@ -8,9 +8,10 @@ router.post("/create", protect, authorize("admin"), upload.fields([{ name: "imag
 router.get("/all", productController.readproduct);
 router.put("/update/:id", protect, authorize("admin"), upload.fields([{ name: "images", maxCount: 5 }, { name: "video", maxCount: 1 }]), productController.updateProduct);
 router.delete("/delete/:id", protect, authorize("admin"), productController.deleteproduct);
-router.get("/:id", productController.getProductById);
+
 
 router.post("/upload", protect, authorize("admin"), upload.single("file"), productController.uploadFile);
 router.get("/files", protect, authorize("admin"), productController.getAllFiles);
+router.get("/:id", productController.getProductById);
 
 export default router;
