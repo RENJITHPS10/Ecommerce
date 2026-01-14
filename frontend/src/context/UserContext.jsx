@@ -1,5 +1,6 @@
 import React, { createContext, useReducer, useContext, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
+import axios from "axios";
 
 const initialState = {
   user: null,
@@ -35,6 +36,12 @@ const userReducer = (state, action) => {
         loading: false,
       };
 
+    case "UPDATE_ADDRESS":
+      return {
+        ...state,
+        user: { ...state.user, address: action.payload },
+      };
+
     default:
       return state;
   }
@@ -44,28 +51,42 @@ export const UserProvider = ({ children }) => {
   const [state, dispatch] = useReducer(userReducer, initialState);
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (token) {
+    const fetchProfile = async (token) => {
       try {
-        const decoded = jwtDecode(token);
-
-        if (decoded.exp * 1000 < Date.now()) {
-          dispatch({ type: "LOGOUT" });
-          return;
-        }
+        const res = await axios.get("http://localhost:5000/api/v1/users/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         dispatch({
           type: "LOGIN",
           payload: {
             token,
             user: {
-              id: decoded.id,
-              Name: decoded.Name,
-              email: decoded.email,
-              role: decoded.role,
+              id: res.data.user._id,
+              name: res.data.user.name,
+              email: res.data.user.email,
+              role: res.data.user.role,
+              address: res.data.user.address,
             },
           },
         });
+      } catch (error) {
+        console.error("Profile fetch failed:", error);
+        dispatch({ type: "LOGOUT" });
+      }
+    };
+
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        if (decoded.exp * 1000 < Date.now()) {
+          dispatch({ type: "LOGOUT" });
+          return;
+        }
+        fetchProfile(token);
       } catch {
         dispatch({ type: "LOGOUT" });
       }

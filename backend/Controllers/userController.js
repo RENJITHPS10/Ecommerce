@@ -73,7 +73,7 @@ export const login = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-       
+      address: user.address,
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
@@ -97,5 +97,45 @@ export const adminDashboard = async (req, res) => {
   res.json({
     message: "Welcome Admin, this is your dashboard!",
   });
+};
+
+export const updateAddress = async (req, res) => {
+  try {
+    const { address } = req.body;
+    const userId = req.user.id;
+
+    if (!address) {
+      return res.status(400).json({ message: "Address is required" });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { address },
+      { new: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({
+      message: "Address updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({ user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
