@@ -4,6 +4,8 @@ import Payment from "../models/paymentModel.js";
 import Order from "../models/orderModel.js";
 import Product from "../models/productModel.js";
 import Cart from "../models/cartModel.js";
+import User from "../models/userModel.js";
+import { sendEmail } from "../utils/emailHelper.js";
 import "dotenv/config";
 
 const razorpay = new Razorpay({
@@ -104,6 +106,91 @@ export const verifyPayment = async (req, res) => {
       await Product.findByIdAndUpdate(item.productId, {
         $inc: { soldcount: item.quantity },
       });
+    }
+
+    // Send Emails
+    try {
+      const user = await User.findById(payment.userId);
+      const adminEmail = process.env.ADMIN_EMAIL;
+
+      const orderItemsHtml = payment.products
+        .map(
+          (item) => `
+        <li>
+          <strong>${item.name}</strong> – ₹${item.price} × ${item.quantity}
+        </li>
+      `
+        )
+        .join("");
+
+      const emailHtml = `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+      <h2 style="color: #7c3aed;">Order Confirmation</h2>
+
+      <p>Hi ${user.name},</p>
+
+      <p>
+        Thank you for shopping with <strong>Kavya Arts & Crafts</strong>.
+        Your payment was successfully completed.
+      </p>
+
+      <p><strong>Order ID:</strong> ${razorpay_order_id}</p>
+      <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
+
+      <h3>Order Items:</h3>
+      <ul>
+        ${orderItemsHtml}
+      </ul>
+
+      <p>
+        We’ll notify you once your order is shipped.
+      </p>
+
+      <p>
+        Warm regards,<br/>
+        <strong>Kavya Arts & Crafts</strong>
+      </p>
+    </div>
+  `;
+
+      // 📧 Email to Customer
+      await sendEmail({
+        to: user.email,
+        subject: "Order Confirmation – Kavya Arts & Crafts",
+        html: emailHtml,
+      });
+
+      // 📧 Email to Admin
+      await sendEmail({
+        to: adminEmail,
+        subject: "New Order Received – Kavya Arts & Crafts",
+        html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2 style="color: #7c3aed;">New Order Alert</h2>
+
+        <p>
+          A new order has been placed by
+          <strong>${user.name}</strong> (${user.email}).
+        </p>
+
+        <p><strong>Order ID:</strong> ${razorpay_order_id}</p>
+        <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
+
+        <h3>Order Items:</h3>
+        <ul>
+          ${orderItemsHtml}
+        </ul>
+
+        <p>
+          Please log in to the admin panel to process this order.
+        </p>
+      </div>
+    `,
+      });
+
+    } catch (emailError) {
+      console.error("Failed to send notification emails:", emailError);
+      // Email failure should not break payment success flow
     }
 
     res.json({

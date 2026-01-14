@@ -99,7 +99,7 @@ export const adminDashboard = async (req, res) => {
   });
 };
 
-export const updateAddress = async (req, res) => {
+export const  updateAddress = async (req, res) => {
   try {
     const { address } = req.body;
     const userId = req.user.id;
