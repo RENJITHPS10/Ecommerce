@@ -2,27 +2,28 @@ import nodemailer from "nodemailer";
 import "dotenv/config";
 
 const transporter = nodemailer.createTransport({
-    service: "gmail",
+    host: "smtp.sendgrid.net",
+    port: 587,
     auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: "apikey",
+        pass: process.env.SENDGRID_API_KEY,
     },
 });
 
 export const sendEmail = async ({ to, subject, html }) => {
     try {
         const mailOptions = {
-            from: `MyShop <${process.env.EMAIL_USER}>`,
+            from: `MyShop <${process.env.EMAIL_FROM}>`,
             to,
             subject,
             html,
         };
 
         const info = await transporter.sendMail(mailOptions);
-        console.log("Email sent: " + info.response);
+        console.log("Email sent: " + info.messageId);
         return info;
     } catch (error) {
-        console.error("Error sending email:", error);
+        console.error("Email sending failed:", error);
         throw error;
     }
 };

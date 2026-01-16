@@ -6,10 +6,10 @@ import "dotenv/config";
 export const register = async (req, res) => {
 
   try {
-    const { name, email, password, role, address } = req.body;
+    const { name, email, password, role, address ,phonenumber } = req.body;
 
 
-    if (!name || !email || !password || !address) {
+    if (!name || !email || !password || !address || !phonenumber) {
       return res.status(400).json({ message: "All fields required" });
     }
 
@@ -29,6 +29,7 @@ export const register = async (req, res) => {
       password: hashedPassword,
       role: role || "user",
       address,
+      phonenumber
     });
 
 
@@ -38,6 +39,7 @@ export const register = async (req, res) => {
       email: newUser.email,
       role: newUser.role,
       address: newUser.address,
+      phonenumber:newUser.phonenumber
     };
 
 

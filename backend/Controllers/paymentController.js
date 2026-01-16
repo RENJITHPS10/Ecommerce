@@ -62,7 +62,7 @@ export const createOrder = async (req, res) => {
   }
 };
 
-export const verifyPayment = async (req, res) => {
+export const alsoverifyPayment = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
       req.body;
@@ -128,6 +128,7 @@ export const verifyPayment = async (req, res) => {
       <h2 style="color: #7c3aed;">Order Confirmation</h2>
 
       <p>Hi ${user.name},</p>
+      
 
       <p>
         Thank you for shopping with <strong>Kavya Arts & Crafts</strong>.
