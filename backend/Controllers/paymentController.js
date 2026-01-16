@@ -143,9 +143,7 @@ export const verifyPayment = async (req, res) => {
         ${orderItemsHtml}
       </ul>
 
-      <p>
-        We’ll notify you once your order is shipped.
-      </p>
+    
 
       <p>
         Warm regards,<br/>
